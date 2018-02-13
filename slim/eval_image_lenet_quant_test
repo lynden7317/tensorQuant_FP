@@ -1,0 +1,14 @@
+DATASET_DIR=/runtmp3/lynden/imageDataset/mnist
+CHECKPOINT_FILE=/runtmp2/lynden/tensorflowCodes/TensorQuant/slim/train_log/lenet
+QMAP=/runtmp2/lynden/tensorflowCodes/TensorQuant/slim/qMap/qMap_lenet_floating
+#CHECKPOINT_FILE=/home/lynden/tensorflowCodes/checkpoints/vgg_19.ckpt
+python eval_image_classifier.py \
+    --alsologtostderr \
+    --batch_size=2 \
+    --max_num_batches=1 \
+    --checkpoint_path=${CHECKPOINT_FILE} \
+    --dataset_dir=${DATASET_DIR} \
+    --dataset_name=mnist \
+    --dataset_split_name=test \
+    --model_name=lenet \
+    --intr_qmap=${QMAP}

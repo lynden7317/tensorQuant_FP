@@ -1,0 +1,10 @@
+DATASET_DIR=/runtmp3/lynden/imageDataset/mnist
+#CHECKPOINT_FILE=/home/user/lynden/tensorflowCodes/models/research/slim/train_logs
+CHECKPOINT_FILE=/runtmp2/lynden/tensorflowCodes/TensorQuant/slim/train_log/lenet
+python eval_image_classifier.py \
+    --alsologtostderr \
+    --checkpoint_path=${CHECKPOINT_FILE} \
+    --dataset_dir=${DATASET_DIR} \
+    --dataset_name=mnist \
+    --dataset_split_name=test \
+    --model_name=lenet

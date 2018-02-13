@@ -1,0 +1,8 @@
+{
+  "LeNet/conv1": "nearest,11,6",
+  "LeNet/pool1": "nearest,11,6",
+  "LeNet/conv2": "nearest,11,6",
+  "LeNet/pool2": "nearest,11,6",
+  "LeNet/fc3": "nearest,11,6",
+  "LeNet/fc4": "nearest,11,6"
+}

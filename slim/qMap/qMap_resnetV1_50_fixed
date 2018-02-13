@@ -1,0 +1,8 @@
+{
+  "resnet_v1_50/conv1":  "nearest, 12, 4",
+  "resnet_v1_50/block1": "nearest, 12, 4",
+  "resnet_v1_50/block2": "nearest, 12, 4",
+  "resnet_v1_50/block3": "nearest, 12, 4",
+  "resnet_v1/block4":    "nearest, 12, 4",
+  "resnet_v1/logits":    "nearest, 12, 4"
+}

@@ -1,0 +1,10 @@
+DATASET_DIR=/runtmp3/lynden/imageDataset/mnist
+TRAIN_DIR=/runtmp2/lynden/tensorflowCodes/TensorQuant/slim/train_log/lenet
+python train_image_classifier.py \
+    --clone_on_cpu=True \
+    --train_dir=${TRAIN_DIR} \
+    --dataset_name=mnist \
+    --dataset_split_name=train \
+    --dataset_dir=${DATASET_DIR} \
+    --model_name=lenet \
+    --max_number_of_steps=120000

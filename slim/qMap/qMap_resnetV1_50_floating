@@ -1,0 +1,8 @@
+{
+  "resnet_v1_50/conv1":  "floating, 5, 10",
+  "resnet_v1_50/block1": "floating, 5, 10",
+  "resnet_v1_50/block2": "floating, 5, 10",
+  "resnet_v1_50/block3": "floating, 5, 10",
+  "resnet_v1/block4":    "floating, 5, 10",
+  "resnet_v1/logits":    "floating, 5, 10"
+}

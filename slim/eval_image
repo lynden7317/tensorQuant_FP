@@ -1,0 +1,9 @@
+DATASET_DIR=/home/lynden/imageDataSet/imagenet
+CHECKPOINT_FILE=/home/lynden/tensorflowCodes/checkpoints/vgg_16.ckpt
+python eval_image_classifier.py \
+    --alsologtostderr \
+    --checkpoint_path=${CHECKPOINT_FILE} \
+    --dataset_dir=${DATASET_DIR} \
+    --dataset_name=imagenet \
+    --dataset_split_name=validation \
+    --model_name=vgg_16

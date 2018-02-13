@@ -1,0 +1,18 @@
+{
+  "InceptionV1/Conv2d_1a_7x7": "floating,5,10",
+  "InceptionV1/MaxPool_2a_3x3": "floating,5,10",
+  "InceptionV1/Conv2d_2b_1x1": "floating,5,10",
+  "InceptionV1/Conv2d_2c_3x3": "floating,5,10",
+  "InceptionV1/MaxPool_3a_3x3": "floating,5,10",
+  "InceptionV1/Mixed_3b": "floating,5,10",
+  "InceptionV1/Mixed_3c": "floating,5,10",
+  "InceptionV1/MaxPool_4a_3x3": "floating,5,10",
+  "InceptionV1/Mixed_4b": "floating,5,10",
+  "InceptionV1/Mixed_4c": "floating,5,10",
+  "InceptionV1/Mixed_4d": "floating,5,10",
+  "InceptionV1/Mixed_4e": "floating,5,10",
+  "InceptionV1/Mixed_4f": "floating,5,10",
+  "InceptionV1/MaxPool_5a_2x2": "floating,5,10",
+  "InceptionV1/Mixed_5b": "floating,5,10",
+  "InceptionV1/Mixed_5c": "floating,5,10"
+}

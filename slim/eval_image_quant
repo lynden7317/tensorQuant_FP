@@ -1,0 +1,12 @@
+DATASET_DIR=/runtmp3/lynden/imageDataset/imagenet
+CHECKPOINT_FILE=/home/user/lynden/tensorflowCodes/checkpoints/inception_v1.ckpt
+QMAP=/home/user/lynden/tensorflowCodes/TensorQuant/slim/qMap_inceptionV1_16_8
+#CHECKPOINT_FILE=/home/lynden/tensorflowCodes/checkpoints/vgg_19.ckpt
+python eval_image_classifier.py \
+    --alsologtostderr \
+    --checkpoint_path=${CHECKPOINT_FILE} \
+    --dataset_dir=${DATASET_DIR} \
+    --dataset_name=imagenet \
+    --dataset_split_name=validation \
+    --model_name=inception_v1 \
+    --intr_qmap=${QMAP}

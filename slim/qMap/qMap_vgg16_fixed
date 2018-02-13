@@ -1,0 +1,7 @@
+{
+  "vgg_16/conv1/conv1_1": "nearest, 11, 6",
+  "vgg_16/conv1/conv1_2": "nearest, 11, 6",
+  "vgg_16/fc6":   "nearest, 11, 6",
+  "vgg_16/fc7":   "nearest, 11, 6",
+  "vgg_16/fc8":   "nearest, 11, 6"
+}

@@ -1,0 +1,12 @@
+DATASET_DIR=/runtmp3/lynden/imageDataset/imagenet
+CHECKPOINT_FILE=/home/user/lynden/tensorflowCodes/checkpoints/resnet_v1_152/resnet_v1_152.ckpt
+#QMAP=/runtmp2/lynden/tensorflowCodes/TensorQuant/slim/qMap/qMap_resnetV1_50_fixed
+
+python eval_image_classifier.py \
+    --alsologtostderr \
+    --checkpoint_path=${CHECKPOINT_FILE} \
+    --dataset_dir=${DATASET_DIR} \
+    --dataset_name=imagenet \
+    --dataset_split_name=validation \
+    --labels_offset=1 \
+    --model_name=resnet_v1_152

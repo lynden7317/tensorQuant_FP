@@ -1,0 +1,8 @@
+{
+  "LeNet/conv1": "floating,3,9",
+  "LeNet/pool1": "floating,3,9",
+  "LeNet/conv2": "floating,3,9",
+  "LeNet/pool2": "floating,3,9",
+  "LeNet/fc3": "floating,3,9",
+  "LeNet/fc4": "floating,3,9"
+}
