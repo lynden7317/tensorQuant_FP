@@ -148,6 +148,9 @@ def get_network_fn(name, num_classes, weight_decay=0.0, is_training=False,
         if 'alexnet' in name:
             return func(images, num_classes, is_training=is_training,
                     conv2d=conv2d, fully_connected=fully_connected, max_pool2d=max_pool2d)
+        if 'vgg' in name:
+            return func(images, num_classes, is_training=is_training,
+                    conv2d=conv2d, max_pool2d=max_pool2d)
         if 'mynet' in name:
             return func(images, num_classes, is_training=is_training,
                     conv2d=conv2d, fully_connected=fully_connected, max_pool2d=max_pool2d)

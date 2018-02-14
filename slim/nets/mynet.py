@@ -26,8 +26,7 @@ slim = tf.contrib.slim
 
 def mynet_arg_scope(weight_decay=0.0):
   with slim.arg_scope(
-      [slim.conv2d, slim.fully_connected,
-       QConv.conv2d, QFullyConnect.fully_connected],
+      [slim.conv2d, slim.fully_connected],
       activation_fn=tf.nn.relu,
       biases_initializer=tf.constant_initializer(0.1),
       weights_regularizer=slim.l2_regularizer(weight_decay),
