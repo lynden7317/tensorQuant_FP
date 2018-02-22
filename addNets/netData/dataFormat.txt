@@ -1,0 +1,2 @@
+xxx.h5 : weights in hdf5 format
+xxx.npy: image/label in numpy array format
