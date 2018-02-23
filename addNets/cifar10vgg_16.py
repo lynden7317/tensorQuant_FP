@@ -11,6 +11,7 @@ from __future__ import division
 #from __future__ import print_function
 
 import numpy as np
+import time
 import tensorflow as tf
 import h5py
 
@@ -24,20 +25,39 @@ from Quantize import Factories
 
 slim = tf.contrib.slim
 
-data_path   = '/runtmp3/lynden/imageDataset/cifar10/'
-hd5Path     = './myNets/cifar10vgg.h5'
-imgsPath    = './myNets/cifaImgNormalize_10.npy'
-labsPath    = './myNets/cifaImgLab_10.npy'
-intr_qmap   = 'qMap_cifar10Vgg16_fixed'  #'qMap_cifar10Vgg16_fixed'
-extr_qmap   = ''
-weight_qmap = ''
-batch_size = 10
+
+tf.app.flags.DEFINE_string(
+    'hdf5_path', '', 'Location of hdf5 weight file.')
+tf.app.flags.DEFINE_string(
+    'img_path', '', 'Location of image dataset.')
+tf.app.flags.DEFINE_string(
+    'lab_path', '', 'Location of label dataset.')
+
+tf.app.flags.DEFINE_integer(
+    'batch_size', 1000, 'The number of samples in each batch.')
+
+#'qMap_cifar10Vgg16_fixed'
+tf.app.flags.DEFINE_string(
+    'intr_qmap', '', 'Location of intrinsic quantizer map.'
+    'If empty, no quantizer is applied.')
+
+tf.app.flags.DEFINE_string(
+    'extr_qmap', '', 'Location of extrinsic quantizer map.'
+    'If empty, no quantizer is applied.')
+
+tf.app.flags.DEFINE_string(
+    'weight_qmap', '', 'Location of weight quantizer map.'
+    'If empty, no quantizer is applied.')
+
+FLAGS = tf.app.flags.FLAGS
+
+# the dict for saving hdf5 weights name/values
 hd5ModelDict = {}
 
 # ==== quantization type ====
-intr_q_map= utils.quantizer_map(intr_qmap)
-extr_q_map= utils.quantizer_map(extr_qmap)
-weight_q_map = utils.quantizer_map(weight_qmap)
+intr_q_map= utils.quantizer_map(FLAGS.intr_qmap)
+extr_q_map= utils.quantizer_map(FLAGS.extr_qmap)
+weight_q_map = utils.quantizer_map(FLAGS.weight_qmap)
 
 Qconv2d = Factories.conv2d_factory(
                 intr_q_map=intr_q_map, extr_q_map=extr_q_map, weight_q_map=weight_q_map)
@@ -59,12 +79,12 @@ def hefVisitor_func(name, node):
         if str(name).split('_')[0] in ['dense']:
             split = str(name).split('/')
             rename = split[1]+'/'+split[2]
-            print '** rename = ', rename
+            #print '** rename = ', rename
             hd5ModelDict['cifar10vgg_16/'+rename] = node.value
         else:
             split = str(name).split('/')
             rename = split[1]+'/'+split[2]
-            print '** rename = ', rename
+            #print '** rename = ', rename
             hd5ModelDict['cifar10vgg_16/'+rename] = node.value
     else:
         pass
@@ -83,7 +103,7 @@ def cifar10vgg_16(inputs, num_classes=10, is_training=False, reuse=None,
     """ cifar10 for vgg16 test
     """
     #end_points = {}
-    with tf.variable_scope(scope, 'cifar10vgg_16', [images, num_classes]):
+    with tf.variable_scope(scope, 'cifar10vgg_16', [inputs, num_classes]):
         net = conv2d(inputs, 64, [3, 3], scope='conv2d_1')
         net = batch_norm(net, scale=True, scope='batch_normalization_1')
         net = conv2d(net, 64, [3, 3], scope='conv2d_2')
@@ -126,62 +146,30 @@ def cifar10vgg_16(inputs, num_classes=10, is_training=False, reuse=None,
     
     return net
 
-# ==== prepare dataset ====
-dataset = dataset_factory.get_dataset(
-        'cifar10', 'test', data_path)
 
-print('dataset= %s' % dataset)
-
-provider = slim.dataset_data_provider.DatasetDataProvider(
-        dataset,
-        shuffle=False,
-        common_queue_capacity=8 * batch_size,
-        common_queue_min=batch_size*4)
-
-[image, label] = provider.get(['image', 'label'])
-
-x = tf.placeholder(tf.float32, [batch_size, 32, 32, 3])
-
-# select the preprocessing function
-#preprocessing_name = 'vgg_16' #'cifarnet'
-#image_preprocessing_fn = preprocessing_factory.get_preprocessing(
-#        preprocessing_name,
-#        is_training=False)
-#eval_image_size = 32
-#image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
-
+# the place to locate images
+x = tf.placeholder(tf.float32, [FLAGS.batch_size, 32, 32, 3])
 
 # === read hdf5 ====
-f5 = h5py.File(hd5Path, 'r')
+f5 = h5py.File(FLAGS.hdf5_path, 'r')
 
 print("Keys: %s" % f5.keys())
 f5.visititems(hefVisitor_func)
 #print hd5ModelDict.keys()
 
-
 init_op = tf.global_variables_initializer()
 
 with tf.Session() as sess:
+    start_time_simu = time.time()
     
-    images, labels = tf.train.batch(
-        [image, label],
-        batch_size=batch_size,
-        num_threads=1,
-        capacity=5 * batch_size)
-    
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    
-    imgs = np.load(imgsPath)
-    labs = np.load(labsPath)
+    imgs = np.load(FLAGS.img_path)
+    labs = np.load(FLAGS.lab_path)
+    # ==== image array value normalization ====
+    mean = 120.707
+    std = 64.15
+    imgs = (imgs-mean)/(std+1e-7)
         
-    #img, lab = sess.run([images, labels])
-    #print('lab: %s' % lab)
-    #print('img: %s' % img)
-    #np.save('cifaImg_10', img)
-    #np.save('cifaImgLab_10', lab)
     
-    #net = cifar10vgg_16(images)
     net = cifar10vgg_16(x, conv2d=Qconv2d, 
                            max_pool2d=Qmax_pool2d, 
                            fully_connected=Qfully_connected)
@@ -190,9 +178,9 @@ with tf.Session() as sess:
     vs = tf.trainable_variables()
     # load hdf5 weights into TF tensor
     for v in vs:
-        print v
+        #print v
         name = str(v.name).split(':')[0]
-        print name
+        #print name
         v.load(hd5ModelDict[name], sess)
         assert np.all(sess.run(v) == hd5ModelDict[name])
     
@@ -201,38 +189,35 @@ with tf.Session() as sess:
     #variance_is_equal = tf.reduce_all(tf.equal(*moving_variances))
     #print([v.name for v in moving_variances])
     for v in moving_means:
-        print v
         name = str(v.name).split(':')[0]
-        print name
         v.load(hd5ModelDict[name], sess)
         assert np.all(sess.run(v) == hd5ModelDict[name])
     
     for v in moving_variances:
-        print v
         name = str(v.name).split(':')[0]
-        print name
         v.load(hd5ModelDict[name], sess)
         assert np.all(sess.run(v) == hd5ModelDict[name])
     
     # convert prediction values for each class into single class prediction
     predictions = tf.to_int64(tf.argmax(softmax, 1))
-    labels = tf.squeeze(labels)
-    #preResult = sess.run([predictions, labels])
+
     preResult = sess.run(predictions, feed_dict={x: imgs})
     
-    print('Net predict labels: %s' % preResult)
-    print('Image Labels: %s' % labs)
+    #print('Net predict labels: %s' % preResult)
+    #print('Image Labels: %s' % labs)
     
     accuracy = 0.0
-    for i in range(batch_size):
+    errorList = []
+    for i in range(FLAGS.batch_size):
         if preResult[i] == labs[i]:
             accuracy += 1.0
+        else:
+            errorList.append((i, [preResult[i], labs[i]]))
     
-    accuracy = accuracy/float(batch_size)
-    print('[accuracy]= %s' % accuracy)
+    accuracy = accuracy/float(FLAGS.batch_size)
+    runtime = time.time()-start_time_simu
     
-  
-    # Stop the threads
-    coord.request_stop()
-    # Wait for threads to stop
-    coord.join(threads)
+    # print statistics
+    print('accuracy= %s' % accuracy)
+    print('error_list= %s' % errorList)
+    print('Runtime: %f sec'%runtime)
