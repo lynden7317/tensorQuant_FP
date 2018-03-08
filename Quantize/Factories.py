@@ -89,5 +89,4 @@ def max_pool2d_factory(intr_q_map=None, extr_q_map=None):
 def avg_pool2d_factory(intr_q_map=None, extr_q_map=None):
     return generic_factory(slim.avg_pool2d, QAvgPool.avg_pool2d, 
                            intr_q_map=intr_q_map, extr_q_map=extr_q_map)  
-
-
+  

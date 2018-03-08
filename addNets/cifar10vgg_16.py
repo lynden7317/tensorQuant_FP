@@ -22,6 +22,7 @@ from preprocessing import preprocessing_factory
 
 from Quantize import Quantizers
 from Quantize import Factories 
+from Quantize import QBatchNorm
 
 slim = tf.contrib.slim
 
@@ -35,6 +36,9 @@ tf.app.flags.DEFINE_string(
 
 tf.app.flags.DEFINE_integer(
     'batch_size', 1000, 'The number of samples in each batch.')
+
+tf.app.flags.DEFINE_string(
+    'log_path', '', 'Location of log.')
 
 #'qMap_cifar10Vgg16_fixed'
 tf.app.flags.DEFINE_string(
@@ -59,6 +63,7 @@ intr_q_map= utils.quantizer_map(FLAGS.intr_qmap)
 extr_q_map= utils.quantizer_map(FLAGS.extr_qmap)
 weight_q_map = utils.quantizer_map(FLAGS.weight_qmap)
 
+
 Qconv2d = Factories.conv2d_factory(
                 intr_q_map=intr_q_map, extr_q_map=extr_q_map, weight_q_map=weight_q_map)
 Qfully_connected = Factories.fully_connected_factory(
@@ -67,6 +72,8 @@ Qmax_pool2d = Factories.max_pool2d_factory(
                 intr_q_map=intr_q_map, extr_q_map=extr_q_map)
 Qavg_pool2d = Factories.avg_pool2d_factory(
                 intr_q_map=intr_q_map, extr_q_map=extr_q_map)
+# batch_norm quantizer
+#Qbatch_norm = intr_q_map['cifar10vgg_16/batch_normalization_1']
 # ===========================
 
 # ==== hdf5 preprocessing ====
@@ -98,46 +105,47 @@ def cifar10vgg_16(inputs, num_classes=10, is_training=False, reuse=None,
           scope='cifar10vgg_16',
           conv2d=slim.conv2d, 
           max_pool2d=slim.max_pool2d,
-          batch_norm=slim.batch_norm,
-          fully_connected = slim.fully_connected):
+          batch_norm=QBatchNorm.batch_norm,
+          fully_connected = slim.fully_connected,
+          quantizer=None):
     """ cifar10 for vgg16 test
     """
     #end_points = {}
     with tf.variable_scope(scope, 'cifar10vgg_16', [inputs, num_classes]):
         net = conv2d(inputs, 64, [3, 3], scope='conv2d_1')
-        net = batch_norm(net, scale=True, scope='batch_normalization_1')
+        net = batch_norm(net, scale=True, scope='batch_normalization_1', quantizer=quantizer)
         net = conv2d(net, 64, [3, 3], scope='conv2d_2')
-        net = batch_norm(net, scale=True, scope='batch_normalization_2')
+        net = batch_norm(net, scale=True, scope='batch_normalization_2', quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool1')
         
         net = conv2d(net, 128, [3, 3], scope='conv2d_3')
-        net = batch_norm(net, scale=True, scope='batch_normalization_3')
+        net = batch_norm(net, scale=True, scope='batch_normalization_3', quantizer=quantizer)
         net = conv2d(net, 128, [3, 3], scope='conv2d_4')
-        net = batch_norm(net, scale=True, scope='batch_normalization_4')
+        net = batch_norm(net, scale=True, scope='batch_normalization_4', quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool2')
         
         net = conv2d(net, 256, [3, 3], scope='conv2d_5')
-        net = batch_norm(net, scale=True, scope='batch_normalization_5')
+        net = batch_norm(net, scale=True, scope='batch_normalization_5', quantizer=quantizer)
         net = conv2d(net, 256, [3, 3], scope='conv2d_6')
-        net = batch_norm(net, scale=True, scope='batch_normalization_6')
+        net = batch_norm(net, scale=True, scope='batch_normalization_6', quantizer=quantizer)
         net = conv2d(net, 256, [3, 3], scope='conv2d_7')
-        net = batch_norm(net, scale=True, scope='batch_normalization_7')
+        net = batch_norm(net, scale=True, scope='batch_normalization_7', quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool3')
         
         net = conv2d(net, 512, [3, 3], scope='conv2d_8')
-        net = batch_norm(net, scale=True, scope='batch_normalization_8')
+        net = batch_norm(net, scale=True, scope='batch_normalization_8', quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_9')
-        net = batch_norm(net, scale=True, scope='batch_normalization_9')
+        net = batch_norm(net, scale=True, scope='batch_normalization_9', quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_10')
-        net = batch_norm(net, scale=True, scope='batch_normalization_10')
+        net = batch_norm(net, scale=True, scope='batch_normalization_10', quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool4')
         
         net = conv2d(net, 512, [3, 3], scope='conv2d_11')
-        net = batch_norm(net, scale=True, scope='batch_normalization_11')
+        net = batch_norm(net, scale=True, scope='batch_normalization_11', quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_12')
-        net = batch_norm(net, scale=True, scope='batch_normalization_12')
+        net = batch_norm(net, scale=True, scope='batch_normalization_12', quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_13')
-        net = batch_norm(net, scale=True, scope='batch_normalization_13')
+        net = batch_norm(net, scale=True, scope='batch_normalization_13', quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool5')
         
         net = slim.flatten(net)
@@ -148,12 +156,13 @@ def cifar10vgg_16(inputs, num_classes=10, is_training=False, reuse=None,
 
 
 # the place to locate images
-x = tf.placeholder(tf.float32, [FLAGS.batch_size, 32, 32, 3])
+#x = tf.placeholder(tf.float32, [FLAGS.batch_size, 32, 32, 3])
+x = tf.placeholder(tf.float32, [5, 32, 32, 3])
 
 # === read hdf5 ====
 f5 = h5py.File(FLAGS.hdf5_path, 'r')
 
-print("Keys: %s" % f5.keys())
+#print("Keys: %s" % f5.keys())
 f5.visititems(hefVisitor_func)
 #print hd5ModelDict.keys()
 
@@ -201,10 +210,28 @@ with tf.Session() as sess:
     # convert prediction values for each class into single class prediction
     predictions = tf.to_int64(tf.argmax(softmax, 1))
 
+
+    fidLog = open(FLAGS.log_path, 'w')
+    accuracy = 0.0
+    for i in xrange(int(FLAGS.batch_size/5)):
+        inputImgs = imgs[i:i+5, :, :, :]
+        preLabs = labs[i:i+5]
+        preResult = sess.run(predictions, feed_dict={x: inputImgs})
+        
+        #print('[%s / %s]' % (i, int(FLAGS.batch_size/5)))
+        fidLog.write('[%s / %s]\n' % (i+1, int(FLAGS.batch_size/5)))
+        fidLog.flush()
+        #print('Net predict labels: %s' % preResult)
+        #print('Image Labels: %s' % labs[i:i+5])
+        for j in range(5):
+            if preResult[j] == preLabs[j]:
+                accuracy += 1.0
+        
+    '''
     preResult = sess.run(predictions, feed_dict={x: imgs})
     
-    #print('Net predict labels: %s' % preResult)
-    #print('Image Labels: %s' % labs)
+    print('Net predict labels: %s' % preResult)
+    print('Image Labels: %s' % labs)
     
     accuracy = 0.0
     errorList = []
@@ -213,11 +240,15 @@ with tf.Session() as sess:
             accuracy += 1.0
         else:
             errorList.append((i, [preResult[i], labs[i]]))
+    '''
     
     accuracy = accuracy/float(FLAGS.batch_size)
     runtime = time.time()-start_time_simu
     
     # print statistics
-    print('accuracy= %s' % accuracy)
-    print('error_list= %s' % errorList)
-    print('Runtime: %f sec'%runtime)
+    #print('accuracy= %s' % accuracy)
+    fidLog.write('accuracy= %s\n' % accuracy)
+    #print('error_list= %s' % errorList)
+    #print('Runtime: %f sec'%runtime)
+    fidLog.write('Runtime: %f sec\n'%runtime)
+    fidLog.close()
