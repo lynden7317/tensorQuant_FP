@@ -113,39 +113,52 @@ def cifar10vgg_16(inputs, num_classes=10, is_training=False, reuse=None,
     #end_points = {}
     with tf.variable_scope(scope, 'cifar10vgg_16', [inputs, num_classes]):
         net = conv2d(inputs, 64, [3, 3], scope='conv2d_1')
-        net = batch_norm(net, scale=True, scope='batch_normalization_1', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_1',
+                         quantizer=quantizer)
         net = conv2d(net, 64, [3, 3], scope='conv2d_2')
-        net = batch_norm(net, scale=True, scope='batch_normalization_2', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_2',
+                         quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool1')
         
         net = conv2d(net, 128, [3, 3], scope='conv2d_3')
-        net = batch_norm(net, scale=True, scope='batch_normalization_3', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_3',
+                         quantizer=quantizer)
         net = conv2d(net, 128, [3, 3], scope='conv2d_4')
-        net = batch_norm(net, scale=True, scope='batch_normalization_4', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_4',
+                         quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool2')
         
         net = conv2d(net, 256, [3, 3], scope='conv2d_5')
-        net = batch_norm(net, scale=True, scope='batch_normalization_5', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_5',
+                         quantizer=quantizer)
         net = conv2d(net, 256, [3, 3], scope='conv2d_6')
-        net = batch_norm(net, scale=True, scope='batch_normalization_6', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_6',
+                         quantizer=quantizer)
         net = conv2d(net, 256, [3, 3], scope='conv2d_7')
-        net = batch_norm(net, scale=True, scope='batch_normalization_7', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_7',
+                         quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool3')
         
         net = conv2d(net, 512, [3, 3], scope='conv2d_8')
-        net = batch_norm(net, scale=True, scope='batch_normalization_8', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_8',
+                         quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_9')
-        net = batch_norm(net, scale=True, scope='batch_normalization_9', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_9',
+                         quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_10')
-        net = batch_norm(net, scale=True, scope='batch_normalization_10', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_10',
+                         quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool4')
         
         net = conv2d(net, 512, [3, 3], scope='conv2d_11')
-        net = batch_norm(net, scale=True, scope='batch_normalization_11', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_11',
+                         quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_12')
-        net = batch_norm(net, scale=True, scope='batch_normalization_12', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_12',
+                         quantizer=quantizer)
         net = conv2d(net, 512, [3, 3], scope='conv2d_13')
-        net = batch_norm(net, scale=True, scope='batch_normalization_13', quantizer=quantizer)
+        net = batch_norm(net, scale=True, is_training=is_training, scope='batch_normalization_13',
+                         quantizer=quantizer)
         net = max_pool2d(net, [2, 2], scope='pool5')
         
         net = slim.flatten(net)
@@ -210,8 +223,9 @@ with tf.Session() as sess:
     # convert prediction values for each class into single class prediction
     predictions = tf.to_int64(tf.argmax(softmax, 1))
 
-
+    
     fidLog = open(FLAGS.log_path, 'w')
+    
     accuracy = 0.0
     for i in xrange(int(FLAGS.batch_size/5)):
         inputImgs = imgs[i:i+5, :, :, :]
@@ -226,8 +240,9 @@ with tf.Session() as sess:
         for j in range(5):
             if preResult[j] == preLabs[j]:
                 accuracy += 1.0
-        
+    
     '''
+    # ==== no partiton batch ===
     preResult = sess.run(predictions, feed_dict={x: imgs})
     
     print('Net predict labels: %s' % preResult)
@@ -240,6 +255,7 @@ with tf.Session() as sess:
             accuracy += 1.0
         else:
             errorList.append((i, [preResult[i], labs[i]]))
+    # =========================
     '''
     
     accuracy = accuracy/float(FLAGS.batch_size)
