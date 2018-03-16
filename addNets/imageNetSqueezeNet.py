@@ -15,6 +15,8 @@ import time
 import tensorflow as tf
 import h5py
 
+from PIL import Image
+
 import utils
 
 from datasets import dataset_factory
@@ -202,9 +204,9 @@ with tf.Session() as sess:
     labs = np.load(FLAGS.lab_path)
     # ==== image array value normalization ====
     #print imgs
-    # 'RGB' -> 'BGR'
-    mean = [103.939, 116.779, 123.68]
+    # 'RGB' -> 'BGR'   
     imgs = imgs[..., ::-1]
+    mean = [103.939, 116.779, 123.68]
     imgs[..., 0] -= mean[0]
     imgs[..., 1] -= mean[1]
     imgs[..., 2] -= mean[2]
@@ -229,9 +231,22 @@ with tf.Session() as sess:
     fidLog = open(FLAGS.log_path, 'w')
     
     accuracy = 0.0
+    idx = 0
     for i in xrange(int(FLAGS.batch_size/5)):
-        inputImgs = imgs[i:i+5, :, :, :]
-        preLabs = labs[i:i+5]
+        inputImgs = imgs[idx:idx+5, :, :, :]
+        
+        for j in range(5):
+            imarr = inputImgs[j, :, :, :]
+            #imarr = imarr[..., ::-1]
+            #imarr[..., 0] += mean[0]
+            #imarr[..., 1] += mean[1]
+            #imarr[..., 2] += mean[2]
+            imarr = np.array(imarr, dtype=np.uint8)
+            imshow = Image.fromarray(imarr)
+            imshow.save(("./writeOut/im%05d.jpeg"%(int(i*5+j))),"jpeg")
+            
+        
+        preLabs = labs[idx:idx+5]
         preResult = sess.run(predictions, feed_dict={x: inputImgs})
         
         print('[%s / %s]' % (i, int(FLAGS.batch_size/5)))
@@ -242,6 +257,8 @@ with tf.Session() as sess:
         for j in range(5):
             if preResult[j] == preLabs[j]:
                 accuracy += 1.0
+        
+        idx += 5
     
     #preResult = sess.run(predictions, feed_dict={x: imgs})
     #print('Net predict labels: %s' % preResult)
