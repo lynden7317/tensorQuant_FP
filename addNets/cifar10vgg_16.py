@@ -227,9 +227,10 @@ with tf.Session() as sess:
     fidLog = open(FLAGS.log_path, 'w')
     
     accuracy = 0.0
+    idx = 0
     for i in xrange(int(FLAGS.batch_size/5)):
-        inputImgs = imgs[i:i+5, :, :, :]
-        preLabs = labs[i:i+5]
+        inputImgs = imgs[idx:idx+5, :, :, :]
+        preLabs = labs[idx:idx+5]
         preResult = sess.run(predictions, feed_dict={x: inputImgs})
         
         #print('[%s / %s]' % (i, int(FLAGS.batch_size/5)))
@@ -240,6 +241,8 @@ with tf.Session() as sess:
         for j in range(5):
             if preResult[j] == preLabs[j]:
                 accuracy += 1.0
+        
+        idx += 5
     
     '''
     # ==== no partiton batch ===
