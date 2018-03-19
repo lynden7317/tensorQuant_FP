@@ -30,22 +30,19 @@ from Quantize import QBatchNorm
 
 slim = tf.contrib.slim
 
-hdf5_path = './squeezeNet/netData/squeezenet_weights_tf_dim_ordering_tf_kernels.h5'
-#data_path   = '/runtmp3/lexhsu/imageDataset/imagenet_s/imagenet/val_src/s/val_0002'
-#batch_size = 16 #1
 
 tf.app.flags.DEFINE_string(
     'hdf5_path', '', 'Location of hdf5 weight file.')
 tf.app.flags.DEFINE_string(
-    'img_path', './squeezeNet/imgTest.npy', 'Location of image dataset.')
+    'img_path', '', 'Location of image dataset.')
 tf.app.flags.DEFINE_string(
-    'lab_path', './squeezeNet/labTest.npy', 'Location of label dataset.')
+    'lab_path', '', 'Location of label dataset.')
 
 tf.app.flags.DEFINE_integer(
     'batch_size', 1000, 'The number of samples in each batch.')
 
 tf.app.flags.DEFINE_string(
-    'log_path', './squeezeNet/logTest', 'Location of log.')
+    'log_path', '', 'Location of log.')
 
 #'qMap_cifar10Vgg16_fixed'
 tf.app.flags.DEFINE_string(
@@ -64,6 +61,22 @@ FLAGS = tf.app.flags.FLAGS
 
 # the dict for saving hdf5 weights name/values
 hd5ModelDict = {}
+
+# ==== quantization type ====
+intr_q_map= utils.quantizer_map(FLAGS.intr_qmap)
+extr_q_map= utils.quantizer_map(FLAGS.extr_qmap)
+weight_q_map = utils.quantizer_map(FLAGS.weight_qmap)
+
+
+Qconv2d = Factories.conv2d_factory(
+                intr_q_map=intr_q_map, extr_q_map=extr_q_map, weight_q_map=weight_q_map)
+Qfully_connected = Factories.fully_connected_factory(
+                intr_q_map=intr_q_map, extr_q_map=extr_q_map, weight_q_map=weight_q_map)
+Qmax_pool2d = Factories.max_pool2d_factory(
+                intr_q_map=intr_q_map, extr_q_map=extr_q_map)
+Qavg_pool2d = Factories.avg_pool2d_factory(
+                intr_q_map=intr_q_map, extr_q_map=extr_q_map)
+# ===========================
 
 # ==== hdf5 preprocessing ====
 def hefVisitor_func(name, node):
@@ -120,15 +133,15 @@ def squeezeNet(inputs, num_classes=1000,
     
     with tf.variable_scope(scope, 'squeezenet', [inputs, num_classes]):
         net = conv2d(inputs, 64, [3, 3], 2, padding='VALID', scope='conv1')
-        net = max_pool2d(net, [3, 3], 2, padding='VALID', scope='pool1')
+        net = max_pool2d(net, [3, 3], 2, padding='SAME', scope='pool1')
         
         net = fire_module(net, fire_id=2, squeeze=16, expand=64, conv2d=conv2d)
         net = fire_module(net, fire_id=3, squeeze=16, expand=64, conv2d=conv2d)
-        net = max_pool2d(net, [3, 3], 2, padding='VALID', scope='pool3')
+        net = max_pool2d(net, [3, 3], 2, padding='SAME', scope='pool3')
         
         net = fire_module(net, fire_id=4, squeeze=32, expand=128, conv2d=conv2d)
         net = fire_module(net, fire_id=5, squeeze=32, expand=128, conv2d=conv2d)
-        net = max_pool2d(net, [3, 3], 2, padding='VALID', scope='pool5')
+        net = max_pool2d(net, [3, 3], 2, padding='SAME', scope='pool5')
         
         net = fire_module(net, fire_id=6, squeeze=48, expand=192, conv2d=conv2d)
         net = fire_module(net, fire_id=7, squeeze=48, expand=192, conv2d=conv2d)
@@ -150,7 +163,7 @@ def squeezeNet(inputs, num_classes=1000,
 x = tf.placeholder(tf.float32, [5, 227, 227, 3])
 
 # === read hdf5 ====
-f5 = h5py.File(hdf5_path, 'r')
+f5 = h5py.File(FLAGS.hdf5_path, 'r')
 
 print("Keys: %s" % f5.keys())
 f5.visititems(hefVisitor_func)
@@ -213,7 +226,8 @@ with tf.Session() as sess:
     
     #print imgs
     
-    net = squeezeNet(x)
+    net = squeezeNet(x, conv2d=Qconv2d, 
+                        max_pool2d=Qmax_pool2d)
     softmax = tf.nn.softmax(net)
     
     vs = tf.trainable_variables()

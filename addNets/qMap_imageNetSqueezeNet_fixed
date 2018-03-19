@@ -1,0 +1,15 @@
+{
+  "squeezenet/conv1":  "nearest, 16, 8",
+  "squeezenet/pool1":  "nearest, 16, 8",
+  "squeezenet/fire2":  "nearest, 16, 8",
+  "squeezenet/fire3":  "nearest, 16, 8",
+  "squeezenet/pool3":  "nearest, 16, 8",
+  "squeezenet/fire4":  "nearest, 16, 8",
+  "squeezenet/fire5":  "nearest, 16, 8",
+  "squeezenet/pool5":  "nearest, 16, 8",
+  "squeezenet/fire6":  "nearest, 16, 8",
+  "squeezenet/fire7":  "nearest, 16, 8",
+  "squeezenet/fire8":  "nearest, 16, 8",
+  "squeezenet/fire9":  "nearest, 16, 8",
+  "squeezenet/conv10": "nearest, 16, 8"
+}
